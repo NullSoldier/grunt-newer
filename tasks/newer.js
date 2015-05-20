@@ -9,6 +9,8 @@ var util = require('../lib/util');
 var counter = 0;
 var configCache = {};
 
+var previous_force_state = null
+
 function cacheConfig(config) {
   ++counter;
   configCache[counter] = config;
@@ -127,8 +129,10 @@ function createTask(grunt) {
       // run the task, and attend to postrun tasks
       var qualified = taskName + ':' + targetName;
       var tasks = [
+        'newer-force:on',
         qualified + (args ? ':' + args : ''),
-        'newer-postrun:' + qualified + ':' + id + ':' + options.cache
+        'newer-force:restore',
+        'newer-postrun:' + qualified + ':' + id + ':' + options.cache,
       ];
       grunt.task.run(tasks);
 
@@ -190,5 +194,15 @@ module.exports = function(grunt) {
           done();
         }
       });
+
+  grunt.registerTask("newer-force", function(set) {
+    if (set === "on") {
+      previous_force_state = grunt.option("force");
+      grunt.option("force", true);
+    }
+    else if (set === "restore") {
+      grunt.option("force", previous_force_state);
+    }
+  });
 
 };
