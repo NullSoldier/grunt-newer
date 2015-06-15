@@ -9,8 +9,6 @@ var util = require('../lib/util');
 var counter = 0;
 var configCache = {};
 
-var previous_force_state = null
-
 function cacheConfig(config) {
   ++counter;
   configCache[counter] = config;
@@ -132,7 +130,7 @@ function createTask(grunt) {
         'newer-force:on',
         qualified + (args ? ':' + args : ''),
         'newer-force:restore',
-        'newer-postrun:' + qualified + ':' + id + ':' + options.cache,
+        'newer-postrun:' + qualified + ':' + id + ':' + options.cache
       ];
       grunt.task.run(tasks);
 
@@ -195,14 +193,15 @@ module.exports = function(grunt) {
         }
       });
 
-  grunt.registerTask("newer-force", function(set) {
-    if (set === "on") {
-      previous_force_state = grunt.option("force");
-      grunt.option("force", true);
-    }
-    else if (set === "restore") {
-      grunt.option("force", previous_force_state);
-    }
-  });
+  var previousForceState = !!grunt.option('force');
+  grunt.registerTask(
+      'newer-force', internal, function(set) {
+        if (set === 'on') {
+          previousForceState = !!grunt.option('force');
+          grunt.option('force', true);
+        } else if (set === 'restore') {
+          grunt.option('force', previousForceState);
+        }
+      });
 
 };
